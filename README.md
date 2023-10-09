@@ -1,0 +1,1 @@
+The codes in this repository are the ones used in support of the course on gpu programming. Feel free to use them and send me an email if you spot a flaw... or just to give feedback.
