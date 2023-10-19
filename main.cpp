@@ -19,6 +19,8 @@ int main(int argc, char *argv[]) {
     if (!isOsCompliant()) {
         std::cout << "Vous exécutez ce code sur un système d'exploitation obsolète." << std::endl;
         std::cout << "Nous vous recommandons d'installer windows 11." << std::endl;
+    } else {
+        std::cout << "Bravo ! Votre système d'exploitation est à jour." << std::endl;
     }
     dumpCharacteristics();
     if (launch_and_test(n) == 0) {
