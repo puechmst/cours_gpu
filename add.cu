@@ -162,3 +162,7 @@ int  launch_and_test(int n) {
 
     return b_pass;
 }
+
+void close_and_reset() {
+    cudaDeviceReset();
+}
