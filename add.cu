@@ -1,6 +1,7 @@
 #include<stdlib.h>
 #include<stdio.h>
 #include<random>
+#include<iostream>
 #include<cuda_runtime.h>
 #include<curand_kernel.h>
 #include "add.h"
@@ -87,6 +88,7 @@ int add_unified(int n) {
     if(alloc_managed_debug((void **)&rnd_states, n * sizeof(curandState)) != cudaSuccess) return 0;
 
     n_blocks = (n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+    std::cout << n_blocks * THREADS_PER_BLOCK << " threads allocated for size " << n << std::endl;
     //rnd_init(n, a);
     //rnd_init(n, b);
     setup_rnd_kernel<<<n_blocks, THREADS_PER_BLOCK>>>(rnd_states );
@@ -136,6 +138,7 @@ int  launch_and_test(int n) {
     cudaMemcpy(db, b, sz, cudaMemcpyHostToDevice);
 
     n_blocks = (n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+    std::cout << n_blocks * THREADS_PER_BLOCK << " threads allocated for size " << n << std::endl;
     add_kernel<<<n_blocks, THREADS_PER_BLOCK>>>(n, da, db, dc);
     cudaDeviceSynchronize();
     cudaMemcpy(c, dc, sz, cudaMemcpyDeviceToHost);
