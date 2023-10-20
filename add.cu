@@ -5,6 +5,7 @@
 #include<cuda_runtime.h>
 #include<curand_kernel.h>
 #include "add.h"
+#include <device_launch_parameters.h>
 #define THREADS_PER_BLOCK (512)
 
 __global__ void add_kernel(int n, float *u, float *v, float *w) {
