@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\puech\Code\COURS_GPU\CMakeFiles\b43a084c57a614c1c299f17f4604cf8e\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{426F5EA2-C106-313E-8320-763C92F3386B}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

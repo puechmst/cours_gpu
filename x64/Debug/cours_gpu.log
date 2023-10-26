@@ -1,0 +1,2 @@
+﻿C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(1116,5): warning MSB8027: Deux ou plusieurs fichiers avec le nom CMakeCXXCompilerId.cpp généreront des sorties vers le même emplacement. Cela peut entraîner une génération incorrecte. Les fichiers impliqués sont build\cmakefiles\3.27.4\compileridcxx\CMakeCXXCompilerId.cpp, out\build\x64-debug\cmakefiles\3.26.4-msvc4\compileridcxx\CMakeCXXCompilerId.cpp.
+  main.cpp

@@ -1,0 +1,10 @@
+^C:\USERS\PUECH\CODE\COURS_GPU\CMAKEFILES\B43A084C57A614C1C299F17F4604CF8E\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/puech/Code/COURS_GPU -BC:/Users/puech/Code/COURS_GPU --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Users/puech/Code/COURS_GPU/coursgpu.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
