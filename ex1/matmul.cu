@@ -9,12 +9,21 @@ __global__ void matmul(int lda, int ncola, float* a, int ncolb, float* b, float*
 	int j = threadIdx.y + blockIdx.y * blockDim.y;
 	float s;
 	if (i < lda && j < ncolb) {	// check validity of thread
-		s = 0.0;
+		s = 0.0f;
 		for (int k = 0; k < ncola; k++) // accumulate products
 			s += a[i * ncola + k] * b[k * ncolb + j];
 		c[i * ncolb + j] = s;
 	}
 }
+__global__ void block_matmul(int lda, int ncola, float* a, int ncolb, float* b, float* c) {
+	// get indices in the matrix
+	int i = threadIdx.x + blockIdx.x * blockDim.x;
+	int j = threadIdx.y + blockIdx.y * blockDim.y;
+	float s;
+	if (i < lda && j < ncolb) {	// check validity of thread
+}
+}
+
 
 void device_matmul(int lda, int ncola, float* a, int ncolb, float* b, float* c) {
 	int nbx, nby;
@@ -40,7 +49,7 @@ void host_matmul(int lda, int ncola, float* a, int ncolb, float* b, float* c) {
 	float s;
 	for(int i = 0 ; i < lda ; i++)
 		for (int j = 0; j < ncolb; j++) {
-			s = 0.0;
+			s = 0.0f;
 			for (int k = 0; k < ncola; k++)
 				s += a[i * ncola + k] * b[k * ncolb + j];
 			c[i * ncolb + j] = s;

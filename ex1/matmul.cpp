@@ -1,10 +1,12 @@
 #include<stdio.h>
 #include<iostream>
+#include<iomanip>
 #include<random>
 #include<math.h>
 #include"matmul.h"
 #include<cuda_runtime.h>
 #include <device_launch_parameters.h>
+#include<chrono>
 
 
 void dumpCharacteristics() {
@@ -48,10 +50,11 @@ void dumpCharacteristics() {
 void random_matrix(int lda, int ncol, float* a) {
    // for debugging purpose, seed has a fixed value
     std::mt19937 gen(5);
+    std::uniform_real_distribution<float> dist(-1.0, 1.0);
 
     for (int i = 0 ; i < lda * ncol ; i++)
     // random generator from c++ standard library
-        a[i] = (float)((double)gen()/(double)(gen.max()));
+        a[i] = dist(gen);
 }
 
 int main(int argc, char* argv[]) {
@@ -66,18 +69,31 @@ int main(int argc, char* argv[]) {
     float *d = new float[lda * ncolb];
     random_matrix(lda, ncola, a);
     random_matrix(ncola, ncolb, b);
-    float err;
+    double err;
+    std::chrono::time_point<std::chrono::system_clock> now =
+        std::chrono::system_clock::now();
     device_matmul(lda, ncola, a, ncolb, b, c);
+    std::chrono::time_point<std::chrono::system_clock> eps1 =
+        std::chrono::system_clock::now();
     host_matmul(lda, ncola, a, ncolb, b, d);
+    std::chrono::time_point<std::chrono::system_clock> eps2 =
+        std::chrono::system_clock::now();
+    long long gpuflops = (long long)(lda * ncola * ncolb) *  1000000 / std::chrono::duration_cast<std::chrono::microseconds>(eps1 - now).count();
+    
+    long long cpuflops = (long long)(lda * ncola * ncolb) * 1000000 / std::chrono::duration_cast<std::chrono::microseconds>(eps2 - eps1).count();
+    std::cout << "GPU Mflops " << gpuflops/1000000 << std::endl;
+    std::cout << "CPU Mflops " << cpuflops/1000000 << std::endl;
     err = 0.0;
-    float de;
+    double de;
+    std::setprecision(19);
     for (int i = 0; i < lda; i++) {
         for (int j = 0; j < ncolb; j++) {
-            de = (d[i * ncolb + j] - c[i * ncolb + j]);
-            err += de * de;
+            de = fabs((double)(d[i * ncolb + j]) - (double)(c[i * ncolb + j]));
+            if (de > err) 
+                err = de;
         }
     }
-    std::cout << "Erreur relative: " << sqrt(err)/(float)(lda*ncolb)<< std::endl;
+    std::cout << "Erreur " << err  << std::endl;
     delete a;
     delete b;
     delete c;
