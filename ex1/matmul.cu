@@ -19,7 +19,14 @@ __global__ void block_matmul(int lda, int ncola, float* a, int ncolb, float* b, 
 	// get indices in the matrix
 	int i = threadIdx.x + blockIdx.x * blockDim.x;
 	int j = threadIdx.y + blockIdx.y * blockDim.y;
+	__shared__ float blockA[BLOCK_DIM][BLOCK_DIM];
+	__shared__ float blockB[BLOCK_DIM][BLOCK_DIM];
+	__shared__ float blockC[BLOCK_DIM][BLOCK_DIM];
+	
 	float s;
+	// iterate over blocks of size BLOCK_DIM * BLOCK_DIM
+	// compute block matrix product
+	// store result.	
 	if (i < lda && j < ncolb) {	// check validity of thread
 }
 }
@@ -37,7 +44,7 @@ void device_matmul(int lda, int ncola, float* a, int ncolb, float* b, float* c) 
 	cudaMalloc(&dc, lda * ncolb * sizeof(float));
 	cudaMemcpy(da, a, lda * ncola * sizeof(float), cudaMemcpyHostToDevice);
 	cudaMemcpy(db, b, ncolb * ncola * sizeof(float), cudaMemcpyHostToDevice);
-	matmul<<< dim3(nbx, nby, 1), dim3(BLOCK_DIM, BLOCK_DIM, 1) >>> (lda, ncola, da, ncolb, db, dc);
+	matmul <<< dim3(nbx, nby, 1), dim3(BLOCK_DIM, BLOCK_DIM, 1) >>> (lda, ncola, da, ncolb, db, dc);
 	cudaDeviceSynchronize();
 	cudaMemcpy(c, dc, lda * ncolb * sizeof(float), cudaMemcpyDeviceToHost);
 	cudaFree(da);
@@ -45,7 +52,7 @@ void device_matmul(int lda, int ncola, float* a, int ncolb, float* b, float* c) 
 	cudaFree(dc);
 }
 
-void host_matmul(int lda, int ncola, float* a, int ncolb, float* b, float* c) {
+void host_matmul(int lda, int ncola, float *   a, int ncolb, float*  b, float*  c) {
 	float s;
 	for(int i = 0 ; i < lda ; i++)
 		for (int j = 0; j < ncolb; j++) {

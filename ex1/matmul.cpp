@@ -85,7 +85,6 @@ int main(int argc, char* argv[]) {
     std::cout << "CPU Mflops " << cpuflops/1000000 << std::endl;
     err = 0.0;
     double de;
-    std::setprecision(19);
     for (int i = 0; i < lda; i++) {
         for (int j = 0; j < ncolb; j++) {
             de = fabs((double)(d[i * ncolb + j]) - (double)(c[i * ncolb + j]));
@@ -94,9 +93,9 @@ int main(int argc, char* argv[]) {
         }
     }
     std::cout << "Erreur " << err  << std::endl;
-    delete a;
-    delete b;
-    delete c;
-    delete d;
+    delete []a;
+    delete []b;
+    delete []c;
+    delete []d;
 	return 0;
 }
