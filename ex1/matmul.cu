@@ -24,6 +24,7 @@ __global__ void block_matmul(int lda, int ncola, float* a, int ncolb, float* b, 
 	__shared__ float blockC[BLOCK_DIM][BLOCK_DIM];
 	
 	float s;
+
 	// iterate over blocks of size BLOCK_DIM * BLOCK_DIM
 	// compute block matrix product
 	// store result.	
