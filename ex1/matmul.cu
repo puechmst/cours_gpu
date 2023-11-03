@@ -19,15 +19,18 @@ __global__ void block_matmul(int lda, int ncola, float* a, int ncolb, float* b, 
 	// get indices in the matrix
 	int i = threadIdx.x + blockIdx.x * blockDim.x;
 	int j = threadIdx.y + blockIdx.y * blockDim.y;
+
 	__shared__ float blockA[BLOCK_DIM][BLOCK_DIM];
 	__shared__ float blockB[BLOCK_DIM][BLOCK_DIM];
 	__shared__ float blockC[BLOCK_DIM][BLOCK_DIM];
+
 	
 	float s;
-
+	for (int k = 0 ; k < gridDim.)	
 	// iterate over blocks of size BLOCK_DIM * BLOCK_DIM
 	// compute block matrix product
-	// store result.	
+	// store result.
+
 	if (i < lda && j < ncolb) {	// check validity of thread
 }
 }
