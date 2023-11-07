@@ -1,54 +1,68 @@
 
-#include<cuda_runtime.h>
+#include <cuda_runtime.h>
 #include <device_launch_parameters.h>
 #define BLOCK_DIM (16)
 
-__global__ void matmul(int lda, int ncola, float* a, int ncolb, float* b, float* c) {
-	// get indices in the matrix
+__global__ void matmul(int lda, int ncola, float *a, int ncolb, float *b, float *c)
+{
+	// indices de l'élément calculé
 	int i = threadIdx.x + blockIdx.x * blockDim.x;
 	int j = threadIdx.y + blockIdx.y * blockDim.y;
 	float s;
-	if (i < lda && j < ncolb) {	// check validity of thread
+	if (i < lda && j < ncolb)
+	{ // test de l'appartenance à la matrice
 		s = 0.0f;
-		for (int k = 0; k < ncola; k++) // accumulate products
+		for (int k = 0; k < ncola; k++) // somme des produits
 			s += a[i * ncola + k] * b[k * ncolb + j];
 		c[i * ncolb + j] = s;
 	}
 }
-__global__ void block_matmul(int lda, int ncola, float* a, int ncolb, float* b, float* c) {
-	// get indices in the matrix
-	int i = threadIdx.x + blockIdx.x * blockDim.x;
-	int j = threadIdx.y + blockIdx.y * blockDim.y;
-
+__global__ void block_matmul(int lda, int ncola, float *a, int ncolb, float *b, float *c)
+{
+	// indice de début des blocs A , B et C
+	int ia = blockIdx.x * ncola * BLOCK_DIM;
+	int ib = blockIdx.y * BLOCK_DIM;
+	int ic = blockIdx.x * ncolb * BLOCK_DIM + blockIdx.y * BLOCK_DIM;
+	// pas en A et B
+	int sa = BLOCK_DIM;
+	int sb = ncolb * BLOCK_DIM;
 	__shared__ float blockA[BLOCK_DIM][BLOCK_DIM];
 	__shared__ float blockB[BLOCK_DIM][BLOCK_DIM];
-	__shared__ float blockC[BLOCK_DIM][BLOCK_DIM];
 
-	
-	float s;
-	for (int k = 0 ; k < gridDim.)	
-	// iterate over blocks of size BLOCK_DIM * BLOCK_DIM
-	// compute block matrix product
-	// store result.
 
-	if (i < lda && j < ncolb) {	// check validity of thread
+	if (blockIdx.x < gridDim.x && blockIdx.y < gridDim.y ) // le bloc est interne
+	{	
+		float s = 0.0f;	
+		for (int k = 0; k < ncola; k += BLOCK_DIM, ia += sa, ib += sb)
+		{
+			// chargement d'un élément en mémoire partagée
+			blockA[threadIdx.x][threadIdx.y] = a[ia + threadIdx.y + threadIdx.x * ncola];
+			blockB[threadIdx.x][threadIdx.y] = b[ib + threadIdx.y + threadIdx.x * ncolb];
+			__syncthreads(); // point de synchronisation pour s'assurer du chargement complet des blocs
+			// calcul du produit matriciel
+			for(int l = 0 ; l < BLOCK_DIM ; l++)
+				s += blockA[threadIdx.x][l] * blockB[l][threadIdx.y];
+			__syncthreads(); // point de synchronisation pour les calculs
+		}
+		c[ic + threadIdx.y + threadIdx.x * ncolb]  = s;
+	}
+
 }
-}
 
-
-void device_matmul(int lda, int ncola, float* a, int ncolb, float* b, float* c) {
+void device_matmul(int lda, int ncola, float *a, int ncolb, float *b, float *c)
+{
 	int nbx, nby;
-	// compute required numvber of blocs in each direction
+	// compute required number of blocs in each direction
 	nbx = (lda + BLOCK_DIM - 1) / BLOCK_DIM;
 	nby = (ncolb + BLOCK_DIM - 1) / BLOCK_DIM;
 	// allocate device memory
-	float* da, * db, * dc;
+	float *da, *db, *dc;
 	cudaMalloc(&da, lda * ncola * sizeof(float));
 	cudaMalloc(&db, ncolb * ncola * sizeof(float));
 	cudaMalloc(&dc, lda * ncolb * sizeof(float));
 	cudaMemcpy(da, a, lda * ncola * sizeof(float), cudaMemcpyHostToDevice);
 	cudaMemcpy(db, b, ncolb * ncola * sizeof(float), cudaMemcpyHostToDevice);
-	matmul <<< dim3(nbx, nby, 1), dim3(BLOCK_DIM, BLOCK_DIM, 1) >>> (lda, ncola, da, ncolb, db, dc);
+	block_matmul<<<dim3(nbx, nby, 1), dim3(BLOCK_DIM, BLOCK_DIM, 1)>>>(lda, ncola, da, ncolb, db, dc);
 	cudaDeviceSynchronize();
 	cudaMemcpy(c, dc, lda * ncolb * sizeof(float), cudaMemcpyDeviceToHost);
 	cudaFree(da);
@@ -56,10 +70,12 @@ void device_matmul(int lda, int ncola, float* a, int ncolb, float* b, float* c) 
 	cudaFree(dc);
 }
 
-void host_matmul(int lda, int ncola, float *   a, int ncolb, float*  b, float*  c) {
+void host_matmul(int lda, int ncola, float *a, int ncolb, float *b, float *c)
+{
 	float s;
-	for(int i = 0 ; i < lda ; i++)
-		for (int j = 0; j < ncolb; j++) {
+	for (int i = 0; i < lda; i++)
+		for (int j = 0; j < ncolb; j++)
+		{
 			s = 0.0f;
 			for (int k = 0; k < ncola; k++)
 				s += a[i * ncola + k] * b[k * ncolb + j];

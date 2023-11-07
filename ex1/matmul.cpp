@@ -59,9 +59,9 @@ void random_matrix(int lda, int ncol, float* a) {
 
 int main(int argc, char* argv[]) {
     dumpCharacteristics();
-    int lda = 1000;
-    int ncola = 1000;
-    int ncolb = 1000;
+    int lda = 4096;
+    int ncola = 256;
+    int ncolb = 4096;
 
     float *a = new float[lda * ncola];
     float *b = new float[ncola * ncolb];
@@ -78,9 +78,10 @@ int main(int argc, char* argv[]) {
     host_matmul(lda, ncola, a, ncolb, b, d);
     std::chrono::time_point<std::chrono::system_clock> eps2 =
         std::chrono::system_clock::now();
-    long long gpuflops = (long long)(lda * ncola * ncolb) *  1000000 / std::chrono::duration_cast<std::chrono::microseconds>(eps1 - now).count();
+    double dsize = (double)(lda) * (double) ncola * (double) ncolb;
+    double gpuflops = 2.0e6 * dsize  / (double) std::chrono::duration_cast<std::chrono::microseconds>(eps1 - now).count();
     
-    long long cpuflops = (long long)(lda * ncola * ncolb) * 1000000 / std::chrono::duration_cast<std::chrono::microseconds>(eps2 - eps1).count();
+    double cpuflops = 2.0e6 * dsize  / (double) std::chrono::duration_cast<std::chrono::microseconds>(eps2 - eps1).count();
     std::cout << "GPU Mflops " << gpuflops/1000000 << std::endl;
     std::cout << "CPU Mflops " << cpuflops/1000000 << std::endl;
     err = 0.0;
