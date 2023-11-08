@@ -1,7 +1,7 @@
 
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
-#define BLOCK_DIM (16)
+#define BLOCK_DIM (8)
 
 __global__ void matmul(int lda, int ncola, float *a, int ncolb, float *b, float *c)
 {
@@ -17,6 +17,7 @@ __global__ void matmul(int lda, int ncola, float *a, int ncolb, float *b, float 
 		c[i * ncolb + j] = s;
 	}
 }
+
 __global__ void block_matmul(int lda, int ncola, float *a, int ncolb, float *b, float *c)
 {
 	// indice de début des blocs A , B et C
@@ -28,25 +29,29 @@ __global__ void block_matmul(int lda, int ncola, float *a, int ncolb, float *b, 
 	int sb = ncolb * BLOCK_DIM;
 	__shared__ float blockA[BLOCK_DIM][BLOCK_DIM];
 	__shared__ float blockB[BLOCK_DIM][BLOCK_DIM];
-
-
-	if (blockIdx.x < gridDim.x && blockIdx.y < gridDim.y ) // le bloc est interne
-	{	
-		float s = 0.0f;	
-		for (int k = 0; k < ncola; k += BLOCK_DIM, ia += sa, ib += sb)
-		{
-			// chargement d'un élément en mémoire partagée
+	int i = blockIdx.x * BLOCK_DIM + threadIdx.x;
+	int j = blockIdx.y * BLOCK_DIM + threadIdx.y;
+	float s = 0.0f;
+	for (int k = 0; k < ncola; k += BLOCK_DIM, ia += sa, ib += sb)
+	{
+		// chargement d'un élément en mémoire partagée
+		if (i < lda)
 			blockA[threadIdx.x][threadIdx.y] = a[ia + threadIdx.y + threadIdx.x * ncola];
+		else
+			blockA[threadIdx.x][threadIdx.y] = 0.0f;
+		if (j < ncolb)
 			blockB[threadIdx.x][threadIdx.y] = b[ib + threadIdx.y + threadIdx.x * ncolb];
-			__syncthreads(); // point de synchronisation pour s'assurer du chargement complet des blocs
-			// calcul du produit matriciel
-			for(int l = 0 ; l < BLOCK_DIM ; l++)
-				s += blockA[threadIdx.x][l] * blockB[l][threadIdx.y];
-			__syncthreads(); // point de synchronisation pour les calculs
-		}
-		c[ic + threadIdx.y + threadIdx.x * ncolb]  = s;
+		else
+			blockB[threadIdx.x][threadIdx.y] = 0.0f;
+		__syncthreads(); // point de synchronisation pour s'assurer du chargement complet des blocs
+		// calcul du produit matriciel
+		int rem = min(BLOCK_DIM, ncola - k);
+		for (int l = 0; l < rem; l++)
+			s += blockA[threadIdx.x][l] * blockB[l][threadIdx.y];
+		__syncthreads(); // point de synchronisation pour les calculs
 	}
-
+	if ((i < lda) && (j < ncolb))
+		c[ic + threadIdx.y + threadIdx.x * ncolb] = s;
 }
 
 void device_matmul(int lda, int ncola, float *a, int ncolb, float *b, float *c)
