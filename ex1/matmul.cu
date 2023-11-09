@@ -34,18 +34,18 @@ __global__ void block_matmul(int lda, int ncola, float *a, int ncolb, float *b, 
 	float s = 0.0f;
 	for (int k = 0; k < ncola; k += BLOCK_DIM, ia += sa, ib += sb)
 	{
+		int rem = min(BLOCK_DIM, ncola - k);
 		// chargement d'un élément en mémoire partagée
-		if (i < lda)
+		if (i < lda && threadIdx.y < rem)
 			blockA[threadIdx.x][threadIdx.y] = a[ia + threadIdx.y + threadIdx.x * ncola];
 		else
 			blockA[threadIdx.x][threadIdx.y] = 0.0f;
-		if (j < ncolb)
-			blockB[threadIdx.x][threadIdx.y] = b[ib + threadIdx.y + threadIdx.x * ncolb];
+		if (j < ncolb && threadIdx.x < rem)
+ 			blockB[threadIdx.x][threadIdx.y] = b[ib + threadIdx.y + threadIdx.x * ncolb];
 		else
 			blockB[threadIdx.x][threadIdx.y] = 0.0f;
 		__syncthreads(); // point de synchronisation pour s'assurer du chargement complet des blocs
 		// calcul du produit matriciel
-		int rem = min(BLOCK_DIM, ncola - k);
 		for (int l = 0; l < rem; l++)
 			s += blockA[threadIdx.x][l] * blockB[l][threadIdx.y];
 		__syncthreads(); // point de synchronisation pour les calculs

@@ -59,9 +59,9 @@ void random_matrix(int lda, int ncol, float* a) {
 
 int main(int argc, char* argv[]) {
     dumpCharacteristics();
-    int lda = 10000;
-    int ncola = 10000;
-    int ncolb = 10000;
+    int lda = 1000;
+    int ncola = 1000;
+    int ncolb = 1000;
 
     float *a = new float[lda * ncola];
     float *b = new float[ncola * ncolb];
@@ -75,15 +75,15 @@ int main(int argc, char* argv[]) {
     device_matmul(lda, ncola, a, ncolb, b, c);
     std::chrono::time_point<std::chrono::system_clock> eps1 =
         std::chrono::system_clock::now();
-    //host_matmul(lda, ncola, a, ncolb, b, d);
-    //std::chrono::time_point<std::chrono::system_clock> eps2 =
+    host_matmul(lda, ncola, a, ncolb, b, d);
+    std::chrono::time_point<std::chrono::system_clock> eps2 =
         std::chrono::system_clock::now();
     double dsize = (double)(lda) * (double) ncola * (double) ncolb;
     double gpuflops = 2.0e6 * dsize  / (double) std::chrono::duration_cast<std::chrono::microseconds>(eps1 - now).count();
     
-    //double cpuflops = 2.0e6 * dsize  / (double) std::chrono::duration_cast<std::chrono::microseconds>(eps2 - eps1).count();
+    double cpuflops = 2.0e6 * dsize  / (double) std::chrono::duration_cast<std::chrono::microseconds>(eps2 - eps1).count();
     std::cout << "GPU Mflops " << gpuflops/1000000 << std::endl;
-    //std::cout << "CPU Mflops " << cpuflops/1000000 << std::endl;
+    std::cout << "CPU Mflops " << cpuflops/1000000 << std::endl;
     err = 0.0;
     double de;
     int imax, jmax;
