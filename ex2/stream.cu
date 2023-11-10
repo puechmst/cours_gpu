@@ -31,7 +31,7 @@ __global__ void dot_product(float *a, float *b, float *c, int  n) {
     __syncthreads();
     if(i == 0) { 
         res = 0.0f;
-        for(int k = 0 ; k < BLOCK_DIM ; k++)
+        for(int k = 0 ; k < gridDim.x ; k++)
             res += c[k];
     }
  }
@@ -45,8 +45,8 @@ void test_dot(int n) {
     int sz = (n+BLOCK_DIM -1)/BLOCK_DIM;
     c = new float[sz];
     for(int i = 0 ; i < n ; i++) {
-        a[i] = 1.0;
-        b[i] = (float)i;
+        a[i] = 1.0/(float)(i+1);
+        b[i] = (float)(i+1);
     }
     cudaMalloc(&da, n * sizeof(float));
     cudaMalloc(&db, n * sizeof(float));
