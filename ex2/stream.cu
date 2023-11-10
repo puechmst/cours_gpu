@@ -13,10 +13,6 @@ __global__ void dot_product(float *a, float *b, float *c, int  n) {
     __shared__ float r[BLOCK_DIM];
     int i = blockIdx.x * BLOCK_DIM + threadIdx.x;
     int step = BLOCK_DIM >> 1;
-    float *c;
-    // allocation mémoire globale
-    if(i == 0)
-        cudaMalloc(&c, BLOCK_DIM);
     // chargement des données
     if(i < n) {
         r[threadIdx.x] = a[i] * b[i];
