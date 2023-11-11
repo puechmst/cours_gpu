@@ -7,7 +7,6 @@
 // la taille d'un bloc doit être un multiple de 2
 #define BLOCK_DIM (256)
 
-
 __global__ void dot_product(float *a, float *b, float *c, int  n) {
     __shared__ float r[BLOCK_DIM];
     int i = blockIdx.x * BLOCK_DIM + threadIdx.x;
@@ -56,7 +55,6 @@ float device_dot(float *a, float *b, int n,cudaStream_t stream) {
     cudaMemcpyAsync(db, hb, n * sizeof(float),cudaMemcpyHostToDevice, stream);
     // appel du noyau sur le flux
     dot_product<<<sz,BLOCK_DIM,0, stream>>>(da, db, dc, n);
-    //cudaMemcpyFromSymbol(dot, res, sizeof(float));
     // copie asynchrone vers le CPU
     cudaMemcpyAsync(hc, dc, sz * sizeof(float),cudaMemcpyDeviceToHost, stream);
     cudaStreamSynchronize(stream);
