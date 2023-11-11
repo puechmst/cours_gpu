@@ -3,6 +3,6 @@
 #include"stream.h"
 
 int main(int argc, char *argv[]) {
-    test_dot(140000);
+    dot_async(140000,8);
     return EXIT_SUCCESS;
 }

@@ -1,1 +1,1 @@
-void test_dot(int n);
+void dot_async(int n, int ntasks);
