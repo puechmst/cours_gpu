@@ -6,7 +6,7 @@
 #include<cuda_runtime.h>
 #include <device_launch_parameters.h>
 
-#define SIZE (256000)
+#define SIZE (512045)
 
 int main(int argc, char *argv[]) {
     float *a = new float[SIZE];

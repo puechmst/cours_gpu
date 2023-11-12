@@ -24,7 +24,8 @@ __global__ void dot_product(float *a, float *b, float *c, int  n) {
         __syncthreads();
         step >>= 1;
     }
-    c[blockIdx.x] = r[0];
+    if(threadIdx.x == 0)
+        c[blockIdx.x] = r[0];
  }
 
  float host_dot(float *a, float *b, int n) {
