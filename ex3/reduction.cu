@@ -5,6 +5,7 @@
 
 #define BLOCK_DIM (256)
 
+// b est un buffer en memoire globale
 __global__ void reduction(float *a, float *b, int n) {
     __shared__ float r[BLOCK_DIM];
     int i = blockIdx.x * BLOCK_DIM + threadIdx.x;
