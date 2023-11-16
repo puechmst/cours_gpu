@@ -3,6 +3,7 @@
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
 #define BLOCK_DIM (8)
+#define BLOCK_MATMUL
 
 __global__ void matmul(int lda, int ncola, float *a, int ncolb, float *b, float *c)
 {
@@ -68,7 +69,11 @@ void device_matmul(int lda, int ncola, float *a, int ncolb, float *b, float *c)
 	cudaMalloc(&dc, lda * ncolb * sizeof(float));
 	cudaMemcpy(da, a, lda * ncola * sizeof(float), cudaMemcpyHostToDevice);
 	cudaMemcpy(db, b, ncolb * ncola * sizeof(float), cudaMemcpyHostToDevice);
+	#ifdef BLOCK_MATMUL
 	block_matmul<<<dim3(nbx, nby, 1), dim3(BLOCK_DIM, BLOCK_DIM, 1)>>>(lda, ncola, da, ncolb, db, dc);
+	#else
+	matmul<<<dim3(nbx, nby, 1), dim3(BLOCK_DIM, BLOCK_DIM, 1)>>>(lda, ncola, da, ncolb, db, dc);
+	#endif
 	cudaDeviceSynchronize();
 	cudaMemcpy(c, dc, lda * ncolb * sizeof(float), cudaMemcpyDeviceToHost);
 	cudaFree(da);
