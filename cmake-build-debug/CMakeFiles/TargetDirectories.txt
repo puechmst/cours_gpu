@@ -4,3 +4,12 @@ C:/Users/puech/Code/COURS_GPU/cmake-build-debug/CMakeFiles/rebuild_cache.dir
 C:/Users/puech/Code/COURS_GPU/cmake-build-debug/ex1/CMakeFiles/matmul.dir
 C:/Users/puech/Code/COURS_GPU/cmake-build-debug/ex1/CMakeFiles/edit_cache.dir
 C:/Users/puech/Code/COURS_GPU/cmake-build-debug/ex1/CMakeFiles/rebuild_cache.dir
+C:/Users/puech/Code/COURS_GPU/cmake-build-debug/ex2/CMakeFiles/stream.dir
+C:/Users/puech/Code/COURS_GPU/cmake-build-debug/ex2/CMakeFiles/edit_cache.dir
+C:/Users/puech/Code/COURS_GPU/cmake-build-debug/ex2/CMakeFiles/rebuild_cache.dir
+C:/Users/puech/Code/COURS_GPU/cmake-build-debug/ex3/CMakeFiles/reduction.dir
+C:/Users/puech/Code/COURS_GPU/cmake-build-debug/ex3/CMakeFiles/edit_cache.dir
+C:/Users/puech/Code/COURS_GPU/cmake-build-debug/ex3/CMakeFiles/rebuild_cache.dir
+C:/Users/puech/Code/COURS_GPU/cmake-build-debug/ex4/CMakeFiles/managed.dir
+C:/Users/puech/Code/COURS_GPU/cmake-build-debug/ex4/CMakeFiles/edit_cache.dir
+C:/Users/puech/Code/COURS_GPU/cmake-build-debug/ex4/CMakeFiles/rebuild_cache.dir

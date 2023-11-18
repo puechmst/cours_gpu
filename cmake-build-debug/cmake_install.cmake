@@ -35,6 +35,9 @@ endif()
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
   include("C:/Users/puech/Code/COURS_GPU/cmake-build-debug/ex1/cmake_install.cmake")
+  include("C:/Users/puech/Code/COURS_GPU/cmake-build-debug/ex2/cmake_install.cmake")
+  include("C:/Users/puech/Code/COURS_GPU/cmake-build-debug/ex3/cmake_install.cmake")
+  include("C:/Users/puech/Code/COURS_GPU/cmake-build-debug/ex4/cmake_install.cmake")
 
 endif()
 

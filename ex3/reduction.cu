@@ -2,7 +2,6 @@
 #include<iostream>
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
-
 #define BLOCK_DIM (256)
 
 // b est un buffer en memoire globale
