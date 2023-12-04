@@ -101,7 +101,6 @@ float test_conv1d() {
    float err = 0.0f;
    for (int i = 0; i < SIZE; i++)
       err += fabsf(y[i] - x[i]);
-   std::cout << err << std::endl;
    cudaFree(dx);
    cudaFree(dy);
    cudaFree(dh);
@@ -139,7 +138,6 @@ float test_conv2d() {
    float err = 0.0f;
    for (int i = 0; i < NROW * NCOL; i++)
       err += fabsf(y[i] - x[i]);
-   std::cout << err << std::endl;
    cudaFree(dx);
    cudaFree(dy);
    cudaFree(dh);
