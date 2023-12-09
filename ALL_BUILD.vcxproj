@@ -178,6 +178,26 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <Project>{5145AC80-AC2C-3B72-9188-8627469C4F17}</Project>
       <Name>gpu</Name>
     </ProjectReference>
+    <ProjectReference Include="C:\Users\puech\Code\COURS_GPU\ex4\managed.vcxproj">
+      <Project>{80EACF8F-2237-353D-A9F0-46A039FCF5D9}</Project>
+      <Name>managed</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\puech\Code\COURS_GPU\ex1\matmul.vcxproj">
+      <Project>{95DF1139-1539-39DF-B3D9-4D7FB6CF30A2}</Project>
+      <Name>matmul</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\puech\Code\COURS_GPU\ex3\reduction.vcxproj">
+      <Project>{48D30D84-6D1C-3B49-9C66-F67BB76FCAEF}</Project>
+      <Name>reduction</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\puech\Code\COURS_GPU\RK45\simu.vcxproj">
+      <Project>{5B06B478-837E-3E6A-AACE-740B5BCA43B1}</Project>
+      <Name>simu</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\puech\Code\COURS_GPU\ex2\stream.vcxproj">
+      <Project>{A0DB9DA2-07F8-3052-8879-1654822BE0AC}</Project>
+      <Name>stream</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
