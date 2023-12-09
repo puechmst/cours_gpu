@@ -7,7 +7,7 @@
 int main(int argc, char *argv[]) {
     int n = 100000;
     int res = 0;
-
+   
     dumpCharacteristics();
     if (launch_and_test(n) == 0) {
         printf("Fail.\n");
