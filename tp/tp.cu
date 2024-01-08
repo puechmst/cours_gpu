@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <iostream>
 
+#include <cuda_runtime.h>
+#include <device_launch_parameters.h>
+
 #define SIZE (1000)
 #define HSIZE (10)
 #define NROW (100)
