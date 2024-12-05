@@ -36,7 +36,7 @@ void cpu_conv2d(int m, int n, float *x, int p, int q, float *h, float *y)
          for (int k = max(0, i - p + 1); k <= i; k++)
          {
             for (int l = max(0, j - q + 1); l <= j; l++)
-               s += x[i * n + j] * h[(i - k) * q + j - l];
+               s += x[k * n + l] * h[(i - k) * q + j - l];
          }
          y[i * n + j] = s;
       }
@@ -68,7 +68,7 @@ __global__ void gpu_conv2d(int m, int n, float *x, int p, int q, float *h, float
       for (int k = max(0, i - p + 1); k <= i; k++)
          {
             for (int l = max(0, j - q + 1); l <= j; l++)
-               s += x[i * n + j] * h[(i - k) * q + j - l];
+               s += x[k * n + l] * h[(i - k) * q + j - l];
          }
       y[i * n + j] = s;
    }
@@ -101,7 +101,6 @@ float test_conv1d() {
    float err = 0.0f;
    for (int i = 0; i < SIZE; i++)
       err += fabsf(y[i] - x[i]);
-   std::cout << err << std::endl;
    cudaFree(dx);
    cudaFree(dy);
    cudaFree(dh);
@@ -139,7 +138,6 @@ float test_conv2d() {
    float err = 0.0f;
    for (int i = 0; i < NROW * NCOL; i++)
       err += fabsf(y[i] - x[i]);
-   std::cout << err << std::endl;
    cudaFree(dx);
    cudaFree(dy);
    cudaFree(dh);

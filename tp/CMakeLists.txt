@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.8)
-project(tpgpu LANGUAGES CXX CUDA)
-include_directories(${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}) 
+#cmake_minimum_required(version 3.8)
+#project(tpgpu languages cxx cuda)
+include_directories(${cmake_cuda_toolkit_include_directories}) 
 add_executable(tpgpu tp.cu)
 set_target_properties(tpgpu PROPERTIES CUDA_ARCHITECTURES "75")
