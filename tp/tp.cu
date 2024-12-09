@@ -98,7 +98,6 @@ __global__ void gpu_conv1d_shared(int n, float *x, int p, float *h, float *y)
 } 
 
 
-
 __global__ void gpu_conv2d(int m, int n, float *x, int p, int q, float *h, float *y)
 {
 
