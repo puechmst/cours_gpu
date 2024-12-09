@@ -1,7 +1,10 @@
 #include <stdio.h>
 #include <iostream>
 
-#define SIZE (100)
+#include <cuda_runtime.h>
+#include <device_launch_parameters.h>
+
+#define SIZE (1000)
 #define HSIZE (10)
 #define NROW (100)
 #define NCOL (100)
@@ -93,6 +96,39 @@ __global__ void gpu_conv1d_shared(int n, float *x, int p, float *h, float *y)
    }
 } 
 
+__global__ void gpu_conv1d_shared(int n, float *x, int p, float *h, float *y)
+{
+   int ib = blockIdx.x * BSIZE;
+   int i = ib + threadIdx.x;
+   int step = HSIZE - 1;
+   __shared__ float hs[HSIZE];
+   __shared__ float xs[BSIZE + HSIZE - 1];
+
+   if(threadIdx.x > 0 && i < n)
+      xs[threadIdx.x + step] = x[i];
+   else {
+      xs[threadIdx.x + step] = 0.0f;
+   }
+   if(threadIdx.x < HSIZE) {
+      hs[threadIdx.x] = h[step-threadIdx.x];
+      if(i >= step)
+         xs[threadIdx.x] = x[i - step];
+      else 
+         xs[threadIdx.x] = 0.0f;
+   }
+   __syncthreads();
+
+   if (i < n)
+   {
+      float s = 0.0;
+      for (int j = 0; j < HSIZE; j++)
+      {
+         s += xs[j+threadIdx.x] * hs[j];
+      }
+      y[i] = s;
+   }
+} 
+
 __global__ void gpu_conv2d(int m, int n, float *x, int p, int q, float *h, float *y)
 {
 
@@ -149,12 +185,13 @@ __global__ void gpu_conv2d_shared(int m, int n, float *x, int p, int q, float *h
 
 
 float test_conv1d() {
-   float *x, *y, *h;
+   float *x, *y, *y0, *h;
    float *dx, *dy, *dh;
    int nb;
 
    x = new float[SIZE];
    y = new float[SIZE];
+   y0 = new float[SIZE];
    h = new float[HSIZE];
 
    for (int i = 0; i < SIZE; i++)
@@ -178,19 +215,25 @@ float test_conv1d() {
    cudaFree(dx);
    cudaFree(dy);
    cudaFree(dh);
+   cpu_conv1d(SIZE, x, HSIZE, h, y);
+   float err = 0.0f;
+   for (int i = 0; i < SIZE; i++)
+      err += fabsf(y[i] - y0[i]);
    delete[] x;
    delete[] y;
+   delete[] y0;
    delete[] h;
    return err;
 }
 
 float test_conv2d() {
-   float *x, *y, *h;
+   float *x, *y, *y0, *h;
    float *dx, *dy, *dh;
    int nbx, nby;
 
    x = new float[NROW * NCOL];
    y = new float[NROW * NCOL];
+   y0 = new float[NROW * NCOL];
    h = new float[NRH * NCH];
 
    for (int i = 0; i < NROW * NCOL; i++)
@@ -206,9 +249,10 @@ float test_conv2d() {
    cudaMalloc(&dh, NRH * NCH * sizeof(float));
    cudaMemcpy(dx, x, NROW * NCOL * sizeof(float), cudaMemcpyHostToDevice);
    cudaMemcpy(dh, h, NRH * NCH * sizeof(float), cudaMemcpyHostToDevice);
-   cpu_conv2d(NROW, NCOL, x, NRH, NCH, h, y);
    gpu_conv2d<<<dim3(nbx, nby, 1), dim3(BX, BY, 1)>>>(NROW, NCOL, dx, NRH, NCH, dh, dy);
-   cudaMemcpy(x, dy, NROW * NCOL * sizeof(float), cudaMemcpyDeviceToHost);
+   cudaMemcpy(y0, dy, NROW * NCOL * sizeof(float), cudaMemcpyDeviceToHost);
+   cudaDeviceSynchronize();
+   cpu_conv2d(NROW, NCOL, x, NRH, NCH, h, y);
    float err = 0.0f;
    for (int i = 0; i < NROW * NCOL; i++)
       err += fabsf(y[i] - x[i]);
@@ -217,6 +261,7 @@ float test_conv2d() {
    cudaFree(dh);
    delete[] x;
    delete[] y;
+   delete[] y0;
    delete[] h;
    return err;
 }
@@ -225,5 +270,6 @@ float test_conv2d() {
 int main(int argc, char *argv[])
 {
    std::cout << test_conv1d() << '\t' << test_conv2d()<< std::endl;
+   cudaDeviceReset();
    return 0;
 }
