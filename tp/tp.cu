@@ -5,11 +5,14 @@
 #define HSIZE (10)
 #define NROW (100)
 #define NCOL (100)
-#define NRH (10)
-#define NCH (10)
+#define NRH (5)
+#define NCH (5)
 #define BSIZE (64)
-#define BX (8)
-#define BY (8)
+#define BX (16)
+#define BY (16)
+#define HALOX (BX+NCH-1)
+#define HALOY (BY+NRH-1)
+
 
 void cpu_conv1d(int n, float *x, int p, float *h, float *y)
 {
@@ -55,10 +58,44 @@ __global__ void gpu_conv1d(int n, float *x, int p, float *h, float *y)
       }
       y[i] = s;
    }
+}
+
+__global__ void gpu_conv1d_shared(int n, float *x, int p, float *h, float *y)
+{
+   int ib = blockIdx.x * BSIZE;
+   int i = ib + threadIdx.x;
+   int step = HSIZE - 1;
+   __shared__ float hs[HSIZE];
+   __shared__ float xs[BSIZE + HSIZE - 1];
+
+   if(threadIdx.x > 0 && i < n)
+      xs[threadIdx.x + step] = x[i];
+   else {
+      xs[threadIdx.x + step] = 0.0f;
+   }
+   if(threadIdx.x < HSIZE) {
+      hs[threadIdx.x] = h[step-threadIdx.x];
+      if(i >= step)
+         xs[threadIdx.x] = x[i - step];
+      else 
+         xs[threadIdx.x] = 0.0f;
+   }
+   __syncthreads();
+
+   if (i < n)
+   {
+      float s = 0.0;
+      for (int j = 0; j < HSIZE; j++)
+      {
+         s += xs[j+threadIdx.x] * hs[j];
+      }
+      y[i] = s;
+   }
 } 
 
 __global__ void gpu_conv2d(int m, int n, float *x, int p, int q, float *h, float *y)
 {
+
    int i = threadIdx.x + blockIdx.x * blockDim.x;
    int j = threadIdx.y + blockIdx.y * blockDim.y;
 
@@ -72,7 +109,44 @@ __global__ void gpu_conv2d(int m, int n, float *x, int p, int q, float *h, float
          }
       y[i * n + j] = s;
    }
+}
+
+__global__ void gpu_conv2d_shared(int m, int n, float *x, int p, int q, float *h, float *y)
+{  
+   __shared__ float xs[HALOX *HALOY];
+   __shared__ float hs[NRH * NCH];
+   int stepx = NCH - 1;
+   int stepy = NRH - 1;
+   int offset;
+   int i = threadIdx.x + blockIdx.x * blockDim.x;
+   int j = threadIdx.y + blockIdx.y * blockDim.y;
+
+   if(threadIdx.x > 0 && threadIdx.y > 0 && i < m && j < n ) {
+      xs[(threadIdx.x +stepx) * HALOX + threadIdx.y + stepy] = x[i * n + j];
+   } else
+      xs[(threadIdx.x +stepx) * HALOX + threadIdx.y + stepy] = 0.0f;
+
+   if(threadIdx.x < HSIZE) {
+      hs[threadIdx.x] = h[stepx-threadIdx.x];
+      if(i >= stepx)
+         xs[threadIdx.x] = x[i - stepx];
+      else 
+         xs[threadIdx.x] = 0.0f;
+   }
+   __syncthreads();
+
+   if (i < m && j < n)
+    {
+      float s = 0.0;
+      for (int k = max(0, i - p + 1); k <= i; k++)
+         {
+            for (int l = max(0, j - q + 1); l <= j; l++)
+               s += x[k * n + l] * h[(i - k) * q + j - l];
+         }
+      y[i * n + j] = s;
+   }
 } 
+
 
 float test_conv1d() {
    float *x, *y, *h;
