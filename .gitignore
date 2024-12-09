@@ -5,4 +5,7 @@ cmake-build-debug
 *.exe
 *.out
 *.o
-.idea
+*.vcxproj
+*.sln
+*.cmake
+CMakeFiles
