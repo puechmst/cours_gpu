@@ -1,0 +1,1 @@
+float device_reduction(float *a, int n);
