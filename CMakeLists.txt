@@ -5,7 +5,7 @@ add_subdirectory(ex1)
 add_subdirectory(ex2)
 add_subdirectory(ex3)
 add_subdirectory(ex4)
-add_subdirectory(RK45)
+#add_subdirectory(RK45)
 add_subdirectory(tp)
 add_executable(gpu main.cpp add.cu check.cu
         )

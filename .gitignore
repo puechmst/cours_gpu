@@ -5,7 +5,11 @@ cmake-build-debug
 *.exe
 *.out
 *.o
+<<<<<<< HEAD
 *.vcxproj
 *.sln
 *.cmake
 CMakeFiles
+=======
+.idea
+>>>>>>> bc7706cd60e55378c6e4024c86e42e88be2b662f
