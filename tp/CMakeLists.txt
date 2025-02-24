@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.8)
+set(CMAKE_CUDA_COMPILER /usr/bin/nvcc)
+set(CMAKE_CUDA_ARCHITECTURES "50;72")
+set(CMAKE_CUDA_FLAGS -allow-unsupported-compiler)
 project(tpgpu LANGUAGES CXX CUDA)
 include_directories(${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}) 
 add_executable(tpgpu tp.cu)
-set_target_properties(tpgpu PROPERTIES CUDA_ARCHITECTURES "75")
