@@ -97,38 +97,7 @@ __global__ void gpu_conv1d_shared(int n, float *x, int p, float *h, float *y)
    }
 }
 
-__global__ void gpu_conv1d_shared(int n, float *x, int p, float *h, float *y)
-{
-   int ib = blockIdx.x * BSIZE;
-   int i = ib + threadIdx.x;
-   int step = HSIZE - 1;
-   __shared__ float hs[HSIZE];
-   __shared__ float xs[BSIZE + HSIZE - 1];
 
-   if(threadIdx.x > 0 && i < n)
-      xs[threadIdx.x + step] = x[i];
-   else {
-      xs[threadIdx.x + step] = 0.0f;
-   }
-   if(threadIdx.x < HSIZE) {
-      hs[threadIdx.x] = h[step-threadIdx.x];
-      if(i >= step)
-         xs[threadIdx.x] = x[i - step];
-      else 
-         xs[threadIdx.x] = 0.0f;
-   }
-   __syncthreads();
-
-   if (i < n)
-   {
-      float s = 0.0;
-      for (int j = 0; j < HSIZE; j++)
-      {
-         s += xs[j+threadIdx.x] * hs[j];
-      }
-      y[i] = s;
-   }
-} 
 
 __global__ void gpu_conv2d(int m, int n, float *x, int p, int q, float *h, float *y)
 {
