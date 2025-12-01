@@ -6,13 +6,15 @@
 
 #define SIZE (1000)
 #define HSIZE (10)
-#define NROW (100)
-#define NCOL (100)
-#define NRH (10)
-#define NCH (10)
+#define NROW (10)
+#define NCOL (10)
+#define NRH (5)
+#define NCH (5)
 #define BSIZE (64)
-#define BX (8)
-#define BY (8)
+#define BX (16)
+#define BY (16)
+#define HALOX (BX + NCH - 1)
+#define HALOY (BY + NRH - 1)
 
 void cpu_conv1d(int n, float *x, int p, float *h, float *y)
 {
@@ -39,7 +41,7 @@ void cpu_conv2d(int m, int n, float *x, int p, int q, float *h, float *y)
          for (int k = max(0, i - p + 1); k <= i; k++)
          {
             for (int l = max(0, j - q + 1); l <= j; l++)
-               s += x[i * n + j] * h[(i - k) * q + j - l];
+               s += x[k * n + l] * h[(i - k) * q + j - l];
          }
          y[i * n + j] = s;
       }
@@ -58,7 +60,42 @@ __global__ void gpu_conv1d(int n, float *x, int p, float *h, float *y)
       }
       y[i] = s;
    }
-} 
+}
+
+__global__ void gpu_conv1d_shared(int n, float *x, int p, float *h, float *y)
+{
+   int ib = blockIdx.x * BSIZE;
+   int i = ib + threadIdx.x;
+   int step = HSIZE - 1;
+   __shared__ float hs[HSIZE];
+   __shared__ float xs[BSIZE + HSIZE - 1];
+
+   if (threadIdx.x > 0 && i < n)
+      xs[threadIdx.x + step] = x[i];
+   else
+   {
+      xs[threadIdx.x + step] = 0.0f;
+   }
+   if (threadIdx.x < HSIZE)
+   {
+      hs[threadIdx.x] = h[step - threadIdx.x];
+      if (i >= step)
+         xs[threadIdx.x] = x[i - step];
+      else
+         xs[threadIdx.x] = 0.0f;
+   }
+   __syncthreads();
+
+   if (i < n)
+   {
+      float s = 0.0;
+      for (int j = 0; j < HSIZE; j++)
+      {
+         s += xs[j + threadIdx.x] * hs[j];
+      }
+      y[i] = s;
+   }
+}
 
 __global__ void gpu_conv1d_shared(int n, float *x, int p, float *h, float *y)
 {
@@ -95,22 +132,75 @@ __global__ void gpu_conv1d_shared(int n, float *x, int p, float *h, float *y)
 
 __global__ void gpu_conv2d(int m, int n, float *x, int p, int q, float *h, float *y)
 {
+
    int i = threadIdx.x + blockIdx.x * blockDim.x;
    int j = threadIdx.y + blockIdx.y * blockDim.y;
 
    if (i < m && j < n)
-    {
+   {
       float s = 0.0;
       for (int k = max(0, i - p + 1); k <= i; k++)
-         {
-            for (int l = max(0, j - q + 1); l <= j; l++)
-               s += x[i * n + j] * h[(i - k) * q + j - l];
-         }
+      {
+         for (int l = max(0, j - q + 1); l <= j; l++)
+            s += x[k * n + l] * h[(i - k) * q + j - l];
+      }
       y[i * n + j] = s;
    }
-} 
+}
 
-float test_conv1d() {
+__global__ void gpu_conv2d_shared(int m, int n, float *x, int p, int q, float *h, float *y)
+{
+   __shared__ float xs[HALOX * HALOY];
+   __shared__ float hs[NRH * NCH];
+   int offsetx = NRH - 1;
+   int offsety = NCH -1;
+   int i = threadIdx.x + blockIdx.x * blockDim.x;
+   int j = threadIdx.y + blockIdx.y * blockDim.y;
+
+   if (i < m && j < n)
+   {
+      xs[(threadIdx.x + offsetx) * HALOX + threadIdx.y + offsety] = x[i * n + j];
+   }
+   else
+      xs[(threadIdx.x + offsetx) * HALOX + threadIdx.y + offsety] = 0.0f;
+
+   if (threadIdx.x < NCH)
+   {
+      if (threadIdx.y < NRH) // populate the filter coefficients.
+         hs[threadIdx.x * NCH + threadIdx.y] = h[threadIdx.x * NCH + threadIdx.y];
+      // populate the halo strip in x
+      if (i >= offsetx) {
+         if(threadIdx.y < NRH) // this is the upper block
+            xs[threadIdx.x * HALOX + threadIdx.y] = x[(i - offsetx)*n + j - offsety];
+         else
+            xs[threadIdx.x * HALOX + threadIdx.y] = x[(i - offsetx)*n + j];
+         }
+      else
+         xs[threadIdx.x * HALOX + threadIdx.y] = 0.0f;
+   } else if(threadIdx.y < NRH) {
+      // populate the halo strip in y
+      if(j >= offsety)
+         xs[threadIdx.x * HALOX + threadIdx.y] = x[i  * n + j - offsety];
+      else
+         xs[threadIdx.x *HALOX + threadIdx.y] = 0.0f;
+
+   }
+   __syncthreads();
+
+   if (i < m && j < n)
+   {
+      float s = 0.0;
+      for (int k = 0 ; k < NRH; k++)
+      {
+         for (int l =0; l < NCH; l++)
+            s += xs[(k+threadIdx.x) * HALOX + l + threadIdx.y] * hs[k * NCH + j];
+      }
+      y[i * n + j] = s;
+   }
+}
+
+float test_conv1d()
+{
    float *x, *y, *y0, *h;
    float *dx, *dy, *dh;
    int nb;
@@ -132,16 +222,16 @@ float test_conv1d() {
    cudaMalloc(&dh, HSIZE * sizeof(float));
    cudaMemcpy(dx, x, SIZE * sizeof(float), cudaMemcpyHostToDevice);
    cudaMemcpy(dh, h, HSIZE * sizeof(float), cudaMemcpyHostToDevice);
+   cpu_conv1d(SIZE, x, HSIZE, h, y);
    gpu_conv1d_shared<<<nb, BSIZE>>>(SIZE, dx, HSIZE, dh, dy);
    cudaMemcpy(y0, dy, SIZE * sizeof(float), cudaMemcpyDeviceToHost);
-   cudaDeviceSynchronize();
-   cudaFree(dx);
-   cudaFree(dy);
-   cudaFree(dh);
-   cpu_conv1d(SIZE, x, HSIZE, h, y);
    float err = 0.0f;
    for (int i = 0; i < SIZE; i++)
       err += fabsf(y[i] - y0[i]);
+   cudaFree(dx);
+   cudaFree(dy);
+   cudaFree(dh);
+
    delete[] x;
    delete[] y;
    delete[] y0;
@@ -149,7 +239,8 @@ float test_conv1d() {
    return err;
 }
 
-float test_conv2d() {
+float test_conv2d()
+{
    float *x, *y, *y0, *h;
    float *dx, *dy, *dh;
    int nbx, nby;
@@ -172,13 +263,15 @@ float test_conv2d() {
    cudaMalloc(&dh, NRH * NCH * sizeof(float));
    cudaMemcpy(dx, x, NROW * NCOL * sizeof(float), cudaMemcpyHostToDevice);
    cudaMemcpy(dh, h, NRH * NCH * sizeof(float), cudaMemcpyHostToDevice);
-   gpu_conv2d<<<dim3(nbx, nby, 1), dim3(BX, BY, 1)>>>(NROW, NCOL, dx, NRH, NCH, dh, dy);
+   gpu_conv2d_shared<<<dim3(nbx, nby, 1), dim3(BX, BY, 1)>>>(NROW, NCOL, dx, NRH, NCH, dh, dy);
    cudaMemcpy(y0, dy, NROW * NCOL * sizeof(float), cudaMemcpyDeviceToHost);
    cudaDeviceSynchronize();
    cpu_conv2d(NROW, NCOL, x, NRH, NCH, h, y);
    float err = 0.0f;
-   for (int i = 0; i < NROW * NCOL; i++)
+   for (int i = 0; i < NROW * NCOL; i++) {
+      std::cout << y0[i] << '\t' << y[i]<<std::endl;
       err += fabsf(y[i] - y0[i]);
+   }
    cudaFree(dx);
    cudaFree(dy);
    cudaFree(dh);
@@ -189,10 +282,9 @@ float test_conv2d() {
    return err;
 }
 
-
 int main(int argc, char *argv[])
 {
-   std::cout << test_conv1d() << '\t' << test_conv2d()<< std::endl;
+   std::cout << test_conv1d() << '\t' << test_conv2d() << std::endl;
    cudaDeviceReset();
    return 0;
 }

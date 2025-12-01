@@ -59,9 +59,9 @@ void random_matrix(int lda, int ncol, float* a) {
 
 int main(int argc, char* argv[]) {
     dumpCharacteristics();
-    int lda = 10000;
+    int lda = 1000;
     int ncola = 1000;
-    int ncolb = 10000;
+    int ncolb = 1000;
 
     float *a = new float[lda * ncola];
     float *b = new float[ncola * ncolb];
