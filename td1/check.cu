@@ -15,6 +15,8 @@ void dumpCharacteristics() {
             std::cout << "Name " << prop.name << std::endl;
             std::cout << "Max threads per block : " << prop.maxThreadsPerBlock << std::endl;
             std::cout << "Warp size : " << prop.warpSize << std::endl;
+            std::cout << "Shared memory per block : " << prop.sharedMemPerBlock << std::endl;
+            std::cout << "Multiprocessor count : " << prop.multiProcessorCount << std::endl;
             std::cout << "Maximum bloc size in x coordinate : " << prop.maxThreadsDim[0] << std::endl;
             std::cout << "Maximum bloc size in y coordinate : " << prop.maxThreadsDim[1] << std::endl;
             std::cout << "Maximum bloc size in z coordinate : " << prop.maxThreadsDim[2] << std::endl;

@@ -78,26 +78,20 @@ cudaError_t alloc_managed_debug(void ** ptr, size_t sz) {
 
 int add_unified(int n) {
     float *a, *b, *c;
-    curandState *rnd_states;
     int sz;
     int n_blocks;
     int b_pass;
     sz = n * sizeof(float);
-    if(alloc_managed_debug((void **)&a, sz) != cudaSuccess) return 0;
-    if(alloc_managed_debug((void **)&b, sz) != cudaSuccess) return 0;
-    if(alloc_managed_debug((void **)&c, sz) != cudaSuccess) return 0;
-    if(alloc_managed_debug((void **)&rnd_states, n * sizeof(curandState)) != cudaSuccess) return 0;
-
+    
     n_blocks = (n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     std::cout << n_blocks * THREADS_PER_BLOCK << " threads allocated for size " << n << std::endl;
-    //rnd_init(n, a);
-    //rnd_init(n, b);
-    setup_rnd_kernel<<<n_blocks, THREADS_PER_BLOCK>>>(rnd_states );
-    cudaDeviceSynchronize();
-    add_init_kernel<<<n_blocks, THREADS_PER_BLOCK>>>(rnd_states, n, a );
-    cudaDeviceSynchronize();
-    add_init_kernel<<<n_blocks, THREADS_PER_BLOCK>>>(rnd_states, n, b );
-    cudaDeviceSynchronize();
+    cudaMallocManaged(&a, sz);
+    cudaMallocManaged(&b, sz);
+    cudaMallocManaged(&c, sz);
+    for(int i = 0 ; i < n ; i++) {
+        a[i] = 0.0f;
+        b[i] = 1.0f;
+    }
     add_kernel<<<n_blocks, THREADS_PER_BLOCK>>>(n, a, b, c);
     cudaDeviceSynchronize();
      // verification
@@ -111,7 +105,7 @@ int add_unified(int n) {
     cudaFree(a);
     cudaFree(b);
     cudaFree(c);
-    cudaFree(rnd_states);
+    //cudaFree(rnd_states);
     return b_pass;
 }
 
